@@ -43,7 +43,7 @@ jobs:
 
       - name: Store PostgreSQL backup to Azure Blob Storage
         run: |
-          azcopy copy ${{ env.POSTGRES_BACKUP_FILENAME }}.tar.gz "${{ env.CONTAINER_URI }}/${{ env.CONTAINER_NAME }}/${{ env.POSTGRES_BACKUP_FILENAME }}.tar.gz${{ env.AZURE_SAS_TOKEN}}"
+          azcopy copy ${{ env.POSTGRES_BACKUP_FILENAME }}.tar.gz "https://backuppost.blob.core.windows.net/post-backup/${{ env.POSTGRES_BACKUP_FILENAME }}.tar.gz?sv=2022-11-02&ss=bfqt&srt=c&sp=rwdlacupiytfx&se=2023-11-30T22:54:08Z&st=2023-11-30T14:54:08Z&spr=https&sig=HOtwOTE9zQhlgNoYb6Zmq7%2B2YFyMwWMg5Pl9tLcgZt0%3D"
      
 
     
