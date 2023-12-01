@@ -3,36 +3,71 @@ on:
    push:
     branches: [ "main" ]
 jobs:
-  postgres_backup_prod:
-    name: Take backup of postgres database in prod
-    env:
-      POSTGRES_PROD_PASSWORD: ${{ secrets.PASSWORD }}
-      POSTGRES_BACKUP_FILENAME: BACKUP$(date +'%Y-%m-%d')
+  # postgres_backup_prod:
+  #   name: Take backup of postgres database in prod
+  #   env:
+  #     POSTGRES_PROD_PASSWORD: ${{ secrets.PASSWORD }}
+  #     POSTGRES_BACKUP_FILENAME: BACKUP$(date +'%Y-%m-%d')
 
+
+  #   runs-on: ubuntu-latest
+
+  #   steps:
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v2
+  #       with:
+  #         python-version: "3.x"
+
+  #     - name: Install dependencies
+  #       run: |
+  #         pip install psycopg2-binary azure-storage-blob
+
+  #     - name: Take PostgreSQL backup
+  #       run: |
+  #         PGPASSWORD=$POSTGRES_PROD_PASSWORD pg_dumpall -U postgres -h 20.207.72.66 -p 5432 -v -f ${{ env.POSTGRES_BACKUP_FILENAME }}
+
+  #     - name: Compress the backup file into a tar
+  #       run: |
+  #         tar -cvzf ${{ env.POSTGRES_BACKUP_FILENAME }}.tar.gz ${{ env.POSTGRES_BACKUP_FILENAME }}
+
+  #     - name: Store PostgreSQL backup to Azure Blob Storage
+  #       run: |
+  #         azcopy copy ${{ env.POSTGRES_BACKUP_FILENAME }}.tar.gz "${{secrets.AZURE_CONTAINER_URL}}/${{secrets.CONTAINERNAME}}/${{ env.POSTGRES_BACKUP_FILENAME }}.tar.gz${{secrets.SASTOKEN}}"
+ 
+  mongodb_backup_prod:
+    name: Take backup of mongodb database in prod
+    env:
+      MONGODB_PROD_HOST: 20.207.72.66
+      MONGODB_PROD_PORT: 27017
+      MONGODB_PROD_USER: myAdmin
+      MONGODB_PROD_PASSWORD: techhub2020_!
+      MONGODB_BACKUP_FILENAME: mongo_prod_$(date +'%Y-%m-%d').archive
+     
 
     runs-on: ubuntu-latest
 
     steps:
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.x"
 
-      - name: Install dependencies
+      - name: Install MongoDB tools
         run: |
-          pip install psycopg2-binary azure-storage-blob
+          sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 656408E390CFB1F5
+          echo "deb http://repo.mongodb.org/apt/ubuntu $(lsb_release -sc)/mongodb-org/4.4 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.4.list
+          sudo apt-get update
+          sudo apt-get install -y mongodb-database-tools
 
-      - name: Take PostgreSQL backup
+      - name: Verify MongoDB Tools Installation
         run: |
-          PGPASSWORD=$POSTGRES_PROD_PASSWORD pg_dumpall -U postgres -h 20.207.72.66 -p 5432 -v -f ${{ env.POSTGRES_BACKUP_FILENAME }}
+          mongodump --version
 
-      - name: Compress the backup file into a tar
+      - name: Take MongoDB backup
         run: |
-          tar -cvzf ${{ env.POSTGRES_BACKUP_FILENAME }}.tar.gz ${{ env.POSTGRES_BACKUP_FILENAME }}
+          set -x
+          mongodump --host $MONGODB_PROD_HOST --port $MONGODB_PROD_PORT --authenticationDatabase=admin --username $MONGODB_PROD_USER --password $MONGODB_PROD_PASSWORD --archive=${{ env.MONGODB_BACKUP_FILENAME }}
 
-      - name: Store PostgreSQL backup to Azure Blob Storage
+      - name: Store MongoDB backup to Azure Blob Storage
         run: |
-          azcopy copy ${{ env.POSTGRES_BACKUP_FILENAME }}.tar.gz "${{secrets.AZURE_CONTAINER_URL}}/${{secrets.CONTAINERNAME}}/${{ env.POSTGRES_BACKUP_FILENAME }}.tar.gz${{secrets.SASTOKEN}}"
-     
+          azcopy copy ${{ env.MONGODB_BACKUP_FILENAME }} "https://backuppost.blob.core.windows.net/mongobackup/${{ env.MONGODB_BACKUP_FILENAME }}?sp=racwdl&st=2023-12-01T07:24:14Z&se=2023-12-01T15:24:14Z&spr=https&sv=2022-11-02&sr=c&sig=IEPWD59AfjToEjEoi97ZkZtapoMrOSboqniKgV5D6g8%3D"
+
+ 
 
     
