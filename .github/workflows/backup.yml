@@ -7,7 +7,8 @@ jobs:
   postgres_backup_prod:
     name: Take backup of postgres database in prod
     env:
-      POSTGRES_BACKUP_FILENAME: backupfile$(date +'%Y-%m-%d')
+      POSTGRES_PROD_PASSWORD: ${{ secrets.PASSWORD }}
+      POSTGRES_BACKUP_FILENAME: BACKUP$(date +'%Y-%m-%d')
 
 
     runs-on: ubuntu-latest
@@ -24,7 +25,7 @@ jobs:
 
       - name: Take PostgreSQL backup
         run: |
-          PGPASSWORD=${{ secrets.PASSWORD }} pg_dumpall -U ${{secrets.USER-POST}} -h ${{secrets.HOST}} -p 5432 -v -f ${{ env.POSTGRES_BACKUP_FILENAME }}
+          PGPASSWORD=$POSTGRES_PROD_PASSWORD pg_dumpall -U postgres -h 20.207.72.66 -p 5432 -v -f ${{ env.POSTGRES_BACKUP_FILENAME }}
 
       - name: Compress the backup file into a tar
         run: |
