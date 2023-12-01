@@ -3,23 +3,12 @@ name: PostgreSQL Backup to Azure Blob Storage
 on:
    push:
     branches: [ "main" ]
-  
-
-env:
-  AZURE_SAS_TOKEN: ${{ secrets.SASTOKEN }} 
-
 jobs:
-
   postgres_backup_prod:
     name: Take backup of postgres database in prod
     env:
-      POSTGRES_PROD_HOST: 20.207.72.66
-      POSTGRES_PROD_USER: postgres
-      POSTGRES_PROD_PORT: 5432
-      POSTGRES_PROD_PASSWORD: ${{ secrets.PASSWORD }}
       POSTGRES_BACKUP_FILENAME: backupfile$(date +'%Y-%m-%d')
-      CONTAINER_URI: ${{ secrets.AZURE_CONTAINER_URL }}
-      CONTAINER_NAME: ${{ secrets.CONTAINERNAME }}
+
 
     runs-on: ubuntu-latest
 
@@ -35,7 +24,7 @@ jobs:
 
       - name: Take PostgreSQL backup
         run: |
-          PGPASSWORD=$POSTGRES_PROD_PASSWORD pg_dumpall -U $POSTGRES_PROD_USER -h $POSTGRES_PROD_HOST -p $POSTGRES_PROD_PORT -v -f ${{ env.POSTGRES_BACKUP_FILENAME }}
+          PGPASSWORD=${{ secrets.PASSWORD }} pg_dumpall -U ${{secrets.USER-POST}} -h ${{secrets.HOST}} -p 5432 -v -f ${{ env.POSTGRES_BACKUP_FILENAME }}
 
       - name: Compress the backup file into a tar
         run: |
