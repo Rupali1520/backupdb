@@ -1,6 +1,4 @@
 name: PostgreSQL Backup to Azure Blob Storage
-
-
 on:
    push:
     branches: [ "main" ]
